@@ -19,6 +19,6 @@ class ProductSchema(BaseSchema):
 
     category_id: int = Field(..., description="Category ID reference (required)")
 
-    category: Optional['CategorySchema'] = None
+    """category: Optional['CategorySchema'] = None"""
     reviews: Optional[List['ReviewSchema']] = []
     order_details: Optional[List['OrderDetailSchema']] = []
