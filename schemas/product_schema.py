@@ -20,5 +20,6 @@ class ProductSchema(BaseSchema):
     category_id: int = Field(..., description="Category ID reference (required)")
 
     """category: Optional['CategorySchema'] = None"""
-    reviews: Optional[List['ReviewSchema']] = []
-    order_details: Optional[List['OrderDetailSchema']] = []
+    reviews: List['ReviewSchema'] = Field(default_factory=list)
+""" order_details: List['OrderDetailSchema'] = Field(default_factory=list)
+    Update product necesit name, price, stock, category_id"""
