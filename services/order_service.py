@@ -49,12 +49,13 @@ class OrderService(BaseServiceImpl):
             logger.error(f"Client with id {schema.client_id} not found")
             raise InstanceNotFoundError(f"Client with id {schema.client_id} not found")
 
-        # Validate bill exists
-        try:
-            self._bill_repository.find(schema.bill_id)
-        except InstanceNotFoundError:
-            logger.error(f"Bill with id {schema.bill_id} not found")
-            raise InstanceNotFoundError(f"Bill with id {schema.bill_id} not found")
+        # Validate bill exists ONLY if provided
+        if schema.bill_id is not None:
+            try:
+                self._bill_repository.find(schema.bill_id)
+            except InstanceNotFoundError:
+                logger.error(f"Bill with id {schema.bill_id} not found")
+                raise InstanceNotFoundError(f"Bill with id {schema.bill_id} not found")
 
         # Set creation date if not provided
         if schema.date is None:
