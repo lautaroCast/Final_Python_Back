@@ -1,4 +1,3 @@
-version: '3.8'
 
 services:
   # Redis Cache - In-memory data store for caching and rate limiting
