@@ -22,5 +22,12 @@ class ClientSchema(BaseSchema):
         pattern=r'^\+?[1-9]\d{6,19}$',
         description="Client's phone number (7-20 digits, optional + prefix)"
     )
-    """addresses: Optional[List['AddressSchema']] = []
-    orders: Optional[List['OrderSchema']] = []"""
+
+    addresses: Optional[List["AddressSchema"]] = None
+    orders: Optional[List["OrderSchema"]] = None
+
+
+from schemas.address_schema import AddressSchema
+from schemas.order_schema import OrderSchema
+
+ClientSchema.model_rebuild()
