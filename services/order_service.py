@@ -97,3 +97,9 @@ class OrderService(BaseServiceImpl):
 
         logger.info(f"Updating order {id_key}")
         return super().update(id_key, schema)
+
+    def get_by_client(self, client_id: int, skip: int = 0, limit: int = 100) -> list[OrderSchema]:
+        """
+        Get orders for a specific client
+        """
+        return self.repository.find_by_client(client_id, skip=skip, limit=limit)

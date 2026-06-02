@@ -1,6 +1,6 @@
 """Product service with Redis caching integration and sanitized logging."""
 import logging
-from typing import List, Optional
+from typing import List, Optional, Tuple
 from sqlalchemy.orm import Session
 
 from models.product import ProductModel
@@ -26,37 +26,64 @@ class ProductService(BaseServiceImpl):
         self.cache = cache_service
         self.cache_prefix = "products"
 
-    def get_all(self, skip: int = 0, limit: int = 100) -> List[ProductSchema]:
+    def get_all(self, skip: int = 0, limit: int = 100, search: Optional[str] = None, category_id: Optional[int] = None, is_active: Optional[bool] = None) -> List[ProductSchema]:
         """
-        Get all products with caching
+        Get all products with optional search and category filters, with caching.
 
-        Cache key pattern: products:list:skip:{skip}:limit:{limit}
+        Cache key pattern:
+        - No filters: products:list:skip:{skip}:limit:{limit}
+        - With filters: products:list:skip:{skip}:limit:{limit}:search:{search}:category:{category_id}:active:{is_active}
+
         TTL: 5 minutes (default REDIS_CACHE_TTL)
+
+        Args:
+            skip: Number of records to skip (pagination)
+            limit: Maximum number of records to return (pagination)
+            search: Optional search term (searches in name and description)
+            category_id: Optional category ID to filter by
+            is_active: Optional boolean to filter active products
+
+        Returns:
+            List of ProductSchema objects
         """
-        # Build cache key
+        # Build cache key with all filters
         cache_key = self.cache.build_key(
             self.cache_prefix,
             "list",
             skip=skip,
-            limit=limit
+            limit=limit,
+            search=search or "",
+            category=category_id or "",
+            active=str(is_active) if is_active is not None else ""
         )
 
         # Try to get from cache
         cached_products = self.cache.get(cache_key)
         if cached_products is not None:
             logger.debug(f"Cache HIT: {cache_key}")
-            # Convert dict list back to ProductSchema list
             return [ProductSchema(**p) for p in cached_products]
 
-        # Cache miss - get from database
+        # Cache miss - get from database with filters
         logger.debug(f"Cache MISS: {cache_key}")
-        products = super().get_all(skip, limit)
+        products, total = self._repository.find_all_with_filters(
+            skip=skip,
+            limit=limit,
+            search=search,
+            category_id=category_id,
+            is_active=is_active
+        )
+
+        # Convert models to schemas using Pydantic from_attributes
+        product_schemas = [
+            ProductSchema.model_validate(p, from_attributes=True)
+            for p in products
+        ]
 
         # Cache the result (convert to dict for JSON serialization)
-        products_dict = [p.model_dump() for p in products]
+        products_dict = [p.model_dump() for p in product_schemas]
         self.cache.set(cache_key, products_dict)
 
-        return products
+        return product_schemas
 
     def get_one(self, id_key: int) -> ProductSchema:
         """

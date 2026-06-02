@@ -4,7 +4,7 @@ SqlAlchemy model for products.
 This module defines the ProductModel class which represents a product in the database.
 """
 
-from sqlalchemy import Column, Float, ForeignKey, Integer, String, CheckConstraint
+from sqlalchemy import Column, Float, ForeignKey, Integer, String, CheckConstraint, Boolean
 from sqlalchemy.orm import relationship
 
 from models.base_model import BaseModel
@@ -31,8 +31,10 @@ class ProductModel(BaseModel):
     )
 
     name = Column(String, index=True)
+    description = Column(String, nullable=True)
     price = Column(Float, index=True)
     stock = Column(Integer, default=0, nullable=False, index=True)  # ✅ Added index
+    is_active = Column(Boolean, default=True, nullable=False, index=True)
     category_id = Column(Integer, ForeignKey('categories.id_key'), index=True)
 
     category = relationship(
